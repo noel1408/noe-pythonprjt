@@ -1,0 +1,111 @@
+import datetime
+
+class Item:
+    """Represents a single inventory item."""
+
+    def __init__(self, item_id, name, description, quantity, reorder_point, unit_cost, selling_price):
+        self.item_id = item_id
+        self.name = name
+        self.description = description
+        self.quantity = quantity
+        self.reorder_point = reorder_point  # When to reorder
+        self.unit_cost = unit_cost
+        self.selling_price = selling_price
+
+    def update_quantity(self, quantity_change):
+        """Updates the item's quantity."""
+        self.quantity += quantity_change
+
+    def check_reorder(self):
+        """Checks if the item needs to be reordered."""
+        if self.quantity <= self.reorder_point:
+            print(f"Warning: Item '{self.name}' is at or below reorder point. Reorder recommended.")
+
+class Inventory:
+    """Manages a collection of inventory items."""
+
+    def __init__(self):
+        self.items = {}
+
+    def add_item(self, item):
+        """Adds an item to the inventory."""
+        if item.item_id not in self.items:
+            self.items[item.item_id] = item
+        else:
+            print(f"Error: Item with ID {item.item_id} already exists.")
+
+    def update_item(self, item_id, **kwargs):
+        """Updates item attributes."""
+        if item_id in self.items:
+            item = self.items[item_id]
+            for key, value in kwargs.items():
+                if hasattr(item, key):
+                    setattr(item, key, value)
+            print(f"Item '{item.name}' updated successfully.")
+        else:
+            print(f"Error: Item with ID {item_id} not found.")
+
+    def remove_item(self, item_id):
+        """Removes an item from the inventory."""
+        if item_id in self.items:
+            del self.items[item_id]
+            print(f"Item with ID {item_id} removed successfully.")
+        else:
+            print(f"Error: Item with ID {item_id} not found.")
+
+    def get_item(self, item_id):
+        """Retrieves an item by its ID."""
+        return self.items.get(item_id)
+
+    def list_items(self):
+        """Lists all items in the inventory."""
+        if not self.items:
+            print("Inventory is empty.")
+        else:
+            for item_id, item in self.items.items():
+                print(f"Item ID: {item_id}")
+                print(f"  Name: {item.name}")
+                print(f"  Description: {item.description}")
+                print(f"  Quantity: {item.quantity}")
+                print(f"  Reorder Point: {item.reorder_point}")
+                print(f"  Unit Cost: ${item.unit_cost:.2f}")
+                print(f"  Selling Price: ${item.selling_price:.2f}")
+
+    # --- Optimization Features ---
+
+    def get_low_stock_items(self):
+        """Identifies items below their reorder point."""
+        low_stock_items = []
+        for item in self.items.values():
+            if item.quantity <= item.reorder_point:
+                low_stock_items.append(item)
+        return low_stock_items
+
+    def calculate_total_inventory_value(self):
+        """Calculates the total value of all items in stock."""
+        total_value = 0
+        for item in self.items.values():
+            total_value += item.quantity * item.unit_cost
+        return total_value
+
+# Example Usage:
+inventory = Inventory()
+
+# Add items to the inventory
+inventory.add_item(Item(1, "Laptop", "High-performance laptop", 10, 5, 800.00, 1200.00))
+inventory.add_item(Item(2, "Mouse", "Wireless mouse", 20, 10, 15.00, 25.00))
+inventory.add_item(Item(3, "Keyboard", "Ergonomic keyboard", 15, 8, 50.00, 75.00))
+
+# Perform inventory operations
+inventory.list_items()
+
+# Check for low stock items
+low_stock_items = inventory.get_low_stock_items()
+if low_stock_items:
+    print("\nItems below reorder point:")
+    for item in low_stock_items:
+        print(f"- {item.name}: {item.quantity} in stock (Reorder point: {item.reorder_point})")
+
+# Calculate total inventory value
+total_value = inventory.calculate_total_inventory_value()
+print(f"\nTotal Inventory Value: ${total_value:.2f}")
