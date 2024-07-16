@@ -1,82 +1,34 @@
-import random
-import time
-from collections import deque
+import googlemaps
+from datetime import datetime
 
-class TrafficLight:
-    """Represents a single traffic light."""
+# Replace with your actual Google Maps API key
+api_key = "AIzaSyD_jA7ABwQSizxPzXyQe0ibuhPBmRQX_nA"
 
-    def __init__(self, green_duration=20, yellow_duration=5, red_duration=15):
-        self.states = ["green", "yellow", "red"]
-        self.green_duration = green_duration
-        self.yellow_duration = yellow_duration
-        self.red_duration = red_duration
-        self.current_state_index = 0  # Start with green
-        self.timer = time.time()
+gmaps = googlemaps.Client(key=api_key)
 
-    def update_state(self):
-        """Updates the traffic light state based on time elapsed."""
-        elapsed_time = time.time() - self.timer
+def get_traffic_and_routes(origin, destination):
+    now = datetime.now()
+    directions_result = gmaps.directions(
+        origin,
+        destination,
+        mode="driving",
+        departure_time=now,
+        traffic_model="best_guess"  # Use real-time traffic data
+    )
 
-        if self.current_state == "green" and elapsed_time >= self.green_duration:
-            self.current_state_index = (self.current_state_index + 1) % len(self.states)
-            self.timer = time.time()  # Reset timer
-        elif self.current_state == "yellow" and elapsed_time >= self.yellow_duration:
-            self.current_state_index = (self.current_state_index + 1) % len(self.states)
-            self.timer = time.time()
-        elif self.current_state == "red" and elapsed_time >= self.red_duration:
-            self.current_state_index = (self.current_state_index + 1) % len(self.states)
-            self.timer = time.time()
+    if directions_result:
+        route = directions_result[0]
+        summary = route['legs'][0]['summary']
+        duration_in_traffic = route['legs'][0]['duration_in_traffic']['text']
+        print(f"Route Summary: {summary}")
+        print(f"Estimated Travel Time (with traffic): {duration_in_traffic}")
 
-    @property
-    def current_state(self):
-        return self.states[self.current_state_index]
+        # You can further process the 'directions_result' to extract 
+        # more detailed traffic information and alternative routes.
+    else:
+        print("No directions found.")
 
-class Road:
-    """Represents a road with a traffic light."""
-
-    def __init__(self, name, traffic_light):
-        self.name = name
-        self.traffic_light = traffic_light
-        self.vehicle_queue = deque()  # Use deque for efficient queue operations
-
-    def add_vehicle(self):
-        """Simulates a vehicle arriving at the road."""
-        self.vehicle_queue.append(1)  # Add a vehicle to the queue
-        print(f"Vehicle added to {self.name}. Queue length: {len(self.vehicle_queue)}")
-
-    def move_vehicles(self):
-        """Simulates vehicles moving when the light is green."""
-        if self.traffic_light.current_state == "green" and self.vehicle_queue:
-            self.vehicle_queue.popleft()  # Remove a vehicle from the front
-            print(f"Vehicle passed through {self.name}. Queue length: {len(self.vehicle_queue)}")
-
-# --- Simulation Setup ---
-traffic_light_ns = TrafficLight()  # North-South traffic light
-traffic_light_ew = TrafficLight()  # East-West traffic light
-
-road_north = Road("North Road", traffic_light_ns)
-road_south = Road("South Road", traffic_light_ns)
-road_east = Road("East Road", traffic_light_ew)
-road_west = Road("West Road", traffic_light_ew)
-
-# --- Main Simulation Loop ---
-while True:
-    # Simulate random vehicle arrivals
-    random_road = random.choice([road_north, road_south, road_east, road_west])
-    random_road.add_vehicle()
-
-    # Update traffic light states
-    traffic_light_ns.update_state()
-    traffic_light_ew.update_state()
-
-    # Move vehicles based on traffic light status
-    road_north.move_vehicles()
-    road_south.move_vehicles()
-    road_east.move_vehicles()
-    road_west.move_vehicles()
-
-    # Print current traffic light states
-    print(f"North-South Light: {traffic_light_ns.current_state.upper()}", end=" | ")
-    print(f"East-West Light: {traffic_light_ew.current_state.upper()}")
-
-    time.sleep(1)  # Update every second
+# Example usage:
+origin = "Times Square, New York"
+destination = "Central Park, New York"
+get_traffic_and_routes(origin, destination)
