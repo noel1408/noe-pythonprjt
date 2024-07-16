@@ -36,7 +36,7 @@ def display_weather(data):
     print("Weather data not available.")
 
 if __name__ == "__main__":
-  api_key = "YOUR_API_KEY_HERE"  # Replace with your actual OpenWeatherMap API key
+  api_key = "429ca1b0fb8da7a51393fd6e3ae4bdd9"  # Replace with your actual OpenWeatherMap API key
   city = "London"  # Change to your desired city
 
   while True:
