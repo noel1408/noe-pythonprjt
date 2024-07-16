@@ -1,20 +1,23 @@
 import requests
+import time
 from datetime import datetime
 
-def get_covid_data():
-  """Fetches global COVID-19 data from the John Hopkins CSSEGISandData repository.
+def get_covid_data(api_key, country=None):
+  
+  url = "https://covid-19-tracking.p.rapidapi.com/v1"
+  if country:
+    url += f"/{country}"
 
-  Returns:
-    dict: A dictionary containing global COVID-19 statistics.
-  """
+  headers = {
+    'b438951f68msh313a5de790c4db3p1a33f7jsna1330da50b86': api_key,
+    'covid-19-data.p.rapidapi.com': 'covid-19-tracking.p.rapidapi.com'
+  }
 
   try:
-    url = "https://api.covid19api.org/summary"
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an exception for bad status codes
-
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
     data = response.json()
-    return data["Global"]
+    return data
   except requests.exceptions.RequestException as e:
     print(f"Error fetching data: {e}")
     return None
@@ -27,17 +30,35 @@ def display_covid_statistics(data):
   """
 
   if data:
-    print("-------------------------------------")
-    print(f"Global COVID-19 Statistics - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("-------------------------------------")
-    print(f"Total Confirmed Cases: {data['TotalConfirmed']:,}")
-    print(f"Total Deaths: {data['TotalDeaths']:,}")
-    print(f"Total Recovered: {data['TotalRecovered']:,}")
-    print(f"New Confirmed Cases (24h): {data['NewConfirmed']:,}")
-    print(f"New Deaths (24h): {data['NewDeaths']:,}")
-    print(f"New Recovered (24h): {data['NewRecovered']:,}")
-    print("-------------------------------------")
+    if 'country' in data:
+      print("-------------------------------------")
+      print(f"{data['country']} COVID-19 Statistics - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+      print("-------------------------------------")
+      print(f"Total Confirmed Cases: {data.get('cases', 'N/A'):,}")
+      print(f"Total Deaths: {data.get('deaths', 'N/A'):,}")
+      print(f"Total Recovered: {data.get('recovered', 'N/A'):,}")
+      print(f"Active Cases: {data.get('active', 'N/A'):,}")
+      print(f"Critical Cases: {data.get('critical', 'N/A'):,}")
+
+    else:  # Global data
+      print("-------------------------------------")
+      print(f"Global COVID-19 Statistics - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+      print("-------------------------------------")
+      print(f"Total Confirmed Cases: {data.get('cases', 'N/A'):,}")
+      print(f"Total Deaths: {data.get('deaths', 'N/A'):,}")
+      print(f"Total Recovered: {data.get('recovered', 'N/A'):,}")
+  else:
+    print("Error: Invalid or no data received.")
 
 if __name__ == "__main__":
-  covid_data = get_covid_data()
-  display_covid_statistics(covid_data) 
+  rapidapi_key = "your_rapidapi_key"  # Replace with your actual RapidAPI key
+  country_code = "US"  # Replace with the desired country code (e.g., "US", "IN", etc.) or leave empty for global data
+
+  while True:
+    if country_code:
+      covid_data = get_covid_data(rapidapi_key, country=country_code)
+    else:
+      covid_data = get_covid_data(rapidapi_key)
+
+    display_covid_statistics(covid_data)
+    time.sleep(3600)  # Update every hour (3600 seconds)
